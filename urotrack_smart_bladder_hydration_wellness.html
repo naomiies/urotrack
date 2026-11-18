@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UroTrack — Smart Bladder & Hydration Wellness</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        medical: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Mode Lansia (Teks Besar) */
+        html.senior-mode {
+            font-size: 18.5px;
+        }
+
+        /* Animasi Lingkaran Pernapasan & Kegel */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.35); }
+            50% { box-shadow: 0 0 0 18px rgba(13, 148, 136, 0); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 3s infinite;
+        }
+
+        .trainer-circle {
+            transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.6s ease, border-color 0.6s ease;
+        }
+
+        /* Pengaturan Cetak / PDF Laporan Dokter */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .tab-section {
+                display: none !important;
+            }
+            #tab-report {
+                display: block !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
+                break-inside: avoid;
+            }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container (Pengganti alert()) -->
+    <div id="toast-container" class="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0 pointer-events-none"></div>
+
+    <!-- Header & Accessibility Controls -->
+    <header class="no-print sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-medical-600 to-cyan-600 flex items-center justify-center text-white shadow-md shadow-medical-600/20 shrink-0">
+                    <!-- UroTrack Water/Bladder SVG Icon -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14a3 3 0 0 0 6 0"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">UroTrack</h1>
+                        <span class="hidden sm:inline-block text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-medical-50 text-medical-700 dark:bg-medical-900/50 dark:text-medical-200 border border-medical-200 dark:border-medical-800">Klinis & Harian</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Bladder & Hydration Wellness Companion</p>
+                </div>
+            </div>
+
+            <!-- Accessibility & Emergency Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Toggle Mode Lansia -->
+                <button id="btn-senior-mode" onclick="toggleSeniorMode()" aria-pressed="false"
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                    <svg class="w-4 h-4 text-medical-600 dark:text-medical-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                    </svg>
+                    <span>Mode Lansia</span>
+                </button>
+
+                <!-- Toggle Mode Malam -->
+                <button id="btn-dark-mode" onclick="toggleDarkMode()" aria-pressed="false"
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                    <svg id="icon-moon" class="w-4 h-4 text-indigo-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                    </svg>
+                    <span id="label-dark-mode">Mode Malam</span>
+                </button>
+
+                <!-- Red Flag Emergency Button -->
+                <button onclick="openRedFlagModal()"
+                    class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-sm shadow-rose-600/30 transition">
+                    <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <span>Tanda Bahaya</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="max-w-6xl mx-auto px-4 pt-1 pb-2 overflow-x-auto">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 min-w-[320px]">
+                <button onclick="switchTab('tracker')" id="nav-tracker"
+                    class="nav-btn active-tab flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition border">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <span>Tracker Harian</span>
+                </button>
+
+                <button onclick="switchTab('screening')" id="nav-screening"
+                    class="nav-btn flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition border">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Skrining Gejala</span>
+                </button>
+
+                <button onclick="switchTab('therapy')" id="nav-therapy"
+                    class="nav-btn flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition border">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Terapi Mandiri</span>
+                </button>
+
+                <button onclick="switchTab('report')" id="nav-report"
+                    class="nav-btn flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold transition border">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span>Laporan Klinis</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+
+        <!-- ===================================================================== -->
+        <!-- TAB 1: TRACKER HARIAN (Smart Voiding & Hydration Tracker)             -->
+        <!-- ===================================================================== -->
+        <section id="tab-tracker" class="tab-section space-y-6">
+            
+            <!-- Top Action Bar: Date & Sample Data Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Jurnal Berkemih & Hidrasi Harian</h2>
+                    <p id="current-date-display" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Hari Ini</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="loadSampleData()"
+                        class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-cyan-50 text-cyan-700 hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800 transition">
+                        Isi Contoh Data Klinis
+                    </button>
+                    <button onclick="confirmClearData()"
+                        class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-rose-950/50 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition">
+                        Reset Jurnal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Total Intake -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Asupan Cairan</span>
+                        <span class="p-2 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                        </span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="stat-intake" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                        <span class="text-sm font-medium text-slate-500">ml</span>
+                    </div>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Target ideal: 1.500 – 2.000 ml/hari</p>
+                </div>
+
+                <!-- Card 2: Total Output -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Output Urin</span>
+                        <span class="p-2 rounded-xl bg-medical-50 dark:bg-medical-950 text-medical-600 dark:text-medical-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="stat-output" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                        <span class="text-sm font-medium text-slate-500">ml</span>
+                    </div>
+                    <p id="stat-avg-void" class="mt-1 text-xs text-slate-500 dark:text-slate-400">Rata-rata: 0 ml / berkemih</p>
+                </div>
+
+                <!-- Card 3: Frekuensi Siang vs Malam -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Frekuensi Berkemih</span>
+                        <span class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                        </span>
+                    </div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="stat-day-count" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                        <span class="text-xs font-semibold text-slate-500">Siang</span>
+                        <span class="text-slate-300 dark:text-slate-700">|</span>
+                        <span id="stat-night-count" class="text-2xl sm:text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">0</span>
+                        <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Malam</span>
+                    </div>
+                    <p id="stat-leak-count" class="mt-1 text-xs text-slate-500 dark:text-slate-400">Kebocoran (inkontinensia): 0x</p>
+                </div>
+
+                <!-- Card 4: Hydration & Irritant Status -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Iritan & Hidrasi</span>
+                        <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                    </div>
+                    <div class="mt-2">
+                        <span id="stat-irritant-badge" class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            Aman / Minim Iritan
+                        </span>
+                    </div>
+                    <p id="stat-irritant-desc" class="mt-1.5 text-xs text-slate-500 dark:text-slate-400">Belum ada minuman pemicu iritasi tercatat.</p>
+                </div>
+            </div>
+
+            <!-- Two-Column Quick Loggers -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- LEFT: Quick Fluid Intake Logger -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="bg-sky-600 dark:bg-sky-800 px-5 py-3.5 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                            <h3 class="font-bold text-base">Catat Asupan Minum</h3>
+                        </div>
+                        <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-medium">Fluid Log</span>
+                    </div>
+
+                    <form id="form-fluid" onsubmit="addFluidLog(event)" class="p-5 space-y-4">
+                        <!-- Drink Type -->
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Jenis Minuman</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="drink-type-group">
+                                <button type="button" onclick="selectDrinkType('Air Putih', false, this)" class="drink-btn active-choice p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>💧</span> <span>Air Putih</span>
+                                </button>
+                                <button type="button" onclick="selectDrinkType('Kopi / Kafein', true, this)" class="drink-btn p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>☕</span> <span>Kopi / Kafein</span>
+                                </button>
+                                <button type="button" onclick="selectDrinkType('Teh', true, this)" class="drink-btn p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>🍵</span> <span>Teh</span>
+                                </button>
+                                <button type="button" onclick="selectDrinkType('Soda / Manis', true, this)" class="drink-btn p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>🥤</span> <span>Soda / Manis</span>
+                                </button>
+                                <button type="button" onclick="selectDrinkType('Jus Asam / Jeruk', true, this)" class="drink-btn p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>🍊</span> <span>Jus Asam</span>
+                                </button>
+                                <button type="button" onclick="selectDrinkType('Susu / Lainnya', false, this)" class="drink-btn p-2.5 rounded-xl border text-left text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                                    <span>🥛</span> <span>Susu / Lain</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bladder Irritant Gentle Alert -->
+                        <div id="irritant-warning-box" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2.5">
+                            <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <div>
+                                <p class="font-bold">Peringatan Pemicu Kandung Kemih (Bladder Irritant)</p>
+                                <p class="mt-0.5 leading-relaxed">Kafein, tein, karbonasi, dan asam dapat merangsang otot detrusor sehingga memicu rasa ingin kencing mendadak (urgensi) dan frekuensi berkemih meningkat.</p>
+                            </div>
+                        </div>
+
+                        <!-- Volume Presets & Custom -->
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Volume Minum (ml)</label>
+                            <div class="grid grid-cols-4 gap-2 mb-2">
+                                <button type="button" onclick="setFluidVolume(100)" class="vol-preset-fluid py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-sky-50 dark:hover:bg-sky-950 transition">100 ml</button>
+                                <button type="button" onclick="setFluidVolume(200)" class="vol-preset-fluid py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-sky-50 dark:hover:bg-sky-950 transition">200 ml</button>
+                                <button type="button" onclick="setFluidVolume(350)" class="vol-preset-fluid py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-sky-50 dark:hover:bg-sky-950 transition">350 ml</button>
+                                <button type="button" onclick="setFluidVolume(500)" class="vol-preset-fluid py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-sky-50 dark:hover:bg-sky-950 transition">500 ml</button>
+                            </div>
+                            <input type="number" id="fluid-volume" value="200" min="10" max="2000" required
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+
+                        <!-- Time & Before Bed Toggle -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                            <div>
+                                <label for="fluid-time" class="block text-xs font-semibold mb-1 text-slate-600 dark:text-slate-400">Waktu Minum</label>
+                                <input type="time" id="fluid-time" required
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
+                            </div>
+                            <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 cursor-pointer mt-4 sm:mt-5">
+                                <input type="checkbox" id="fluid-night" class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500">
+                                <span class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">Malam / Sebelum Tidur</span>
+                            </label>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm shadow-md shadow-sky-600/20 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            <span>Simpan Catatan Minum</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- RIGHT: Quick Voiding Logger -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="bg-medical-600 dark:bg-medical-800 px-5 py-3.5 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+                            <h3 class="font-bold text-base">Catat Buang Air Kecil (Voiding)</h3>
+                        </div>
+                        <span class="text-xs bg-white/20 px-2.5 py-0.5 rounded-full font-medium">Bladder Log</span>
+                    </div>
+
+                    <form id="form-void" onsubmit="addVoidLog(event)" class="p-5 space-y-4">
+                        <!-- Volume Presets -->
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300">Estimasi Volume Urin</label>
+                            <div class="grid grid-cols-3 gap-2 mb-2">
+                                <button type="button" onclick="setVoidVolume(100)" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-medical-50 dark:hover:bg-medical-950 text-center transition">
+                                    <div class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Sedikit</div>
+                                    <div class="text-[11px] text-slate-500">~100 ml</div>
+                                </button>
+                                <button type="button" onclick="setVoidVolume(200)" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-medical-50 dark:hover:bg-medical-950 text-center transition">
+                                    <div class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Sedang</div>
+                                    <div class="text-[11px] text-slate-500">~200 ml</div>
+                                </button>
+                                <button type="button" onclick="setVoidVolume(350)" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-medical-50 dark:hover:bg-medical-950 text-center transition">
+                                    <div class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Banyak</div>
+                                    <div class="text-[11px] text-slate-500">~350 ml</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="void-volume" value="200" min="10" max="1500" required
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-medical-500"
+                                    placeholder="Atau masukkan ml (gelas ukur)">
+                                <span class="text-sm font-bold text-slate-500">ml</span>
+                            </div>
+                        </div>
+
+                        <!-- Urgency Scale (0-4) -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Skala Urgensi (Rasa Ingin Kencing)</label>
+                                <span id="urgency-label-text" class="text-xs font-bold text-medical-600 dark:text-medical-400">1 - Ringan</span>
+                            </div>
+                            <div class="grid grid-cols-5 gap-1.5" id="urgency-scale-group">
+                                <button type="button" onclick="selectUrgency(0, '0 - Biasa / Terjadwal', this)" class="urgency-btn py-2 rounded-xl border text-center font-bold text-sm transition">0</button>
+                                <button type="button" onclick="selectUrgency(1, '1 - Ringan (Bisa ditunda)', this)" class="urgency-btn active-choice py-2 rounded-xl border text-center font-bold text-sm transition">1</button>
+                                <button type="button" onclick="selectUrgency(2, '2 - Sedang (Mulai mendesak)', this)" class="urgency-btn py-2 rounded-xl border text-center font-bold text-sm transition">2</button>
+                                <button type="button" onclick="selectUrgency(3, '3 - Kuat (Sulit ditahan)', this)" class="urgency-btn py-2 rounded-xl border text-center font-bold text-sm transition">3</button>
+                                <button type="button" onclick="selectUrgency(4, '4 - Darurat / Tak tertahan', this)" class="urgency-btn py-2 rounded-xl border text-center font-bold text-sm transition">4</button>
+                            </div>
+                        </div>
+
+                        <!-- Time & Nocturia Checkbox -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                            <div>
+                                <label for="void-time" class="block text-xs font-semibold mb-1 text-slate-600 dark:text-slate-400">Waktu Berkemih</label>
+                                <input type="time" id="void-time" required
+                                    class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-medical-500">
+                            </div>
+                            <label class="flex items-center gap-2.5 p-3 rounded-xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50/60 dark:bg-indigo-950/40 cursor-pointer mt-4 sm:mt-5">
+                                <input type="checkbox" id="void-nocturia" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                                <span class="text-xs sm:text-sm font-semibold text-indigo-900 dark:text-indigo-200">Bangun Tidur (Nokturia)</span>
+                            </label>
+                        </div>
+
+                        <!-- Leakage / Incontinence Toggle -->
+                        <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 space-y-2.5">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <span class="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">Terjadi Kebocoran Urin (Mengompol)?</span>
+                                <input type="checkbox" id="void-leakage" onchange="toggleLeakageTrigger()" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500">
+                            </label>
+                            <div id="leakage-trigger-container" class="hidden pt-1">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Pemicu Kebocoran:</label>
+                                <select id="void-leak-trigger" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-medium">
+                                    <option value="Tidak Sempat ke Toilet (Urge)">Tidak Sempat ke Toilet (Urge Incontinence)</option>
+                                    <option value="Batuk / Bersin / Tertawa (Stress)">Batuk / Bersin / Tertawa (Stress Incontinence)</option>
+                                    <option value="Olahraga / Angkat Beban">Olahraga / Mengangkat Beban</option>
+                                    <option value="Menetes Setelah Kencing (Post-Dribble)">Menetes Setelah Selesai Kencing</option>
+                                    <option value="Lainnya">Lainnya / Tidak Diketahui</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full py-3 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-sm shadow-md shadow-medical-600/20 transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            <span>Simpan Catatan Berkemih</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Today's Activity Timeline -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Linimasa Aktivitas Hari Ini</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Urutan kronologis asupan cairan dan pola berkemih</p>
+                    </div>
+                    <span id="timeline-count-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">0 Catatan</span>
+                </div>
+
+                <div id="activity-timeline-list" class="space-y-3">
+                    <!-- Rendered dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- TAB 2: SKRINING GEJALA (IPSS & OAB-V8 Calculators)                    -->
+        <!-- ===================================================================== -->
+        <section id="tab-screening" class="tab-section hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Skrining Gejala Urologi Terstandar</h2>
+                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Pilih kuesioner klinis yang sesuai dengan profil keluhan Anda. Hasil otomatis tersimpan ke dalam Laporan Klinis dokter.</p>
+
+                <!-- Questionnaire Sub-Selector -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                    <button onclick="switchScreeningForm('ipss')" id="btn-sub-ipss"
+                        class="p-4 rounded-xl border-2 text-left transition flex items-start gap-3 border-medical-600 bg-medical-50/70 dark:bg-medical-950/40">
+                        <div class="w-9 h-9 rounded-lg bg-medical-600 text-white flex items-center justify-center font-bold shrink-0">♂</div>
+                        <div>
+                            <div class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Kuesioner IPSS (Pria / Prostat)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">International Prostate Symptom Score — Evaluasi BPH & LUTS pada pria.</div>
+                        </div>
+                    </button>
+
+                    <button onclick="switchScreeningForm('oab')" id="btn-sub-oab"
+                        class="p-4 rounded-xl border-2 text-left transition flex items-start gap-3 border-slate-200 dark:border-slate-800 hover:border-medical-400">
+                        <div class="w-9 h-9 rounded-lg bg-cyan-600 text-white flex items-center justify-center font-bold shrink-0">⚡</div>
+                        <div>
+                            <div class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">Kuesioner OAB-V8 (Umum)</div>
+                            <div class="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Overactive Bladder Awareness Tool — Deteksi kandung kemih overaktif & inkontinensia.</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- IPSS Form Container -->
+            <div id="screening-ipss-container" class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <h3 class="text-base sm:text-lg font-bold text-medical-700 dark:text-medical-400">International Prostate Symptom Score (IPSS)</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Dalam <strong>1 bulan terakhir</strong>, seberapa sering Anda mengalami hal-hal berikut?</p>
+                </div>
+
+                <div id="ipss-questions-list" class="space-y-5">
+                    <!-- Rendered via JS -->
+                </div>
+
+                <!-- IPSS Result Box -->
+                <div id="ipss-result-box" class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Skor IPSS Anda</span>
+                            <div class="flex items-baseline gap-3 mt-1">
+                                <span id="ipss-total-score" class="text-3xl sm:text-4xl font-extrabold text-medical-600 dark:text-medical-400">0</span>
+                                <span class="text-sm font-semibold text-slate-500">/ 35</span>
+                                <span id="ipss-severity-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Gejala Ringan (0–7)</span>
+                            </div>
+                        </div>
+                        <button onclick="saveScreeningResult('IPSS')"
+                            class="px-5 py-2.5 rounded-xl bg-medical-600 hover:bg-medical-700 text-white text-sm font-bold shadow-sm transition">
+                            Simpan ke Laporan Dokter
+                        </button>
+                    </div>
+                    <p id="ipss-interpretation" class="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Skor 0–7 menunjukkan gejala saluran kemih bawah ringan. Lanjutkan pemantauan cairan dan gaya hidup sehat.
+                    </p>
+                </div>
+            </div>
+
+            <!-- OAB-V8 Form Container -->
+            <div id="screening-oab-container" class="hidden bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <h3 class="text-base sm:text-lg font-bold text-cyan-700 dark:text-cyan-400">Kuesioner OAB-V8 (Overactive Bladder Awareness Tool)</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Seberapa besar Anda merasa <strong>terganggu</strong> oleh keluhan-keluhan berikut ini?</p>
+                </div>
+
+                <div id="oab-questions-list" class="space-y-5">
+                    <!-- Rendered via JS -->
+                </div>
+
+                <!-- OAB Result Box -->
+                <div id="oab-result-box" class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Skor OAB-V8 Anda</span>
+                            <div class="flex items-baseline gap-3 mt-1">
+                                <span id="oab-total-score" class="text-3xl sm:text-4xl font-extrabold text-cyan-600 dark:text-cyan-400">0</span>
+                                <span class="text-sm font-semibold text-slate-500">/ 40</span>
+                                <span id="oab-severity-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Risiko Rendah (&lt; 8)</span>
+                            </div>
+                        </div>
+                        <button onclick="saveScreeningResult('OAB-V8')"
+                            class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-bold shadow-sm transition">
+                            Simpan ke Laporan Dokter
+                        </button>
+                    </div>
+                    <p id="oab-interpretation" class="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Skor di bawah 8 menandakan kemungkinan kecil mengalami Overactive Bladder.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- TAB 3: TERAPI MANDIRI (Bladder Retraining & Kegel Trainer)            -->
+        <!-- ===================================================================== -->
+        <section id="tab-therapy" class="tab-section hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- MODULE A: Bladder Retraining Timer -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-medical-50 text-medical-700 dark:bg-medical-950 dark:text-medical-300 border border-medical-200 dark:border-medical-800">Terapi Perilaku OAB</span>
+                            <span class="text-xs text-slate-400">Urge Suppression</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-3">Bladder Retraining Timer</h3>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                            Saat rasa ingin kencing muncul mendadak, gunakan timer ini untuk menunda berkemih secara bertahap dan melatih kapasitas kandung kemih.
+                        </p>
+
+                        <!-- Duration Presets -->
+                        <div class="grid grid-cols-3 gap-2 mt-4">
+                            <button onclick="setRetrainDuration(180)" class="retrain-preset py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-medical-50 dark:hover:bg-medical-950 transition">3 Menit</button>
+                            <button onclick="setRetrainDuration(300)" class="retrain-preset py-2 rounded-xl border border-medical-600 bg-medical-50 dark:bg-medical-950/60 text-medical-700 dark:text-medical-300 text-xs sm:text-sm font-bold transition">5 Menit</button>
+                            <button onclick="setRetrainDuration(600)" class="retrain-preset py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold hover:bg-medical-50 dark:hover:bg-medical-950 transition">10 Menit</button>
+                        </div>
+                    </div>
+
+                    <!-- Animated Breathing & Countdown Circle -->
+                    <div class="flex flex-col items-center justify-center py-4">
+                        <div id="retrain-circle" class="w-44 h-44 sm:w-52 sm:h-52 rounded-full border-4 border-medical-500 bg-medical-50/60 dark:bg-medical-950/40 flex flex-col items-center justify-center text-center p-4 shadow-inner">
+                            <span id="retrain-timer-display" class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">05:00</span>
+                            <span id="retrain-breath-cue" class="text-xs font-semibold text-medical-700 dark:text-medical-300 mt-1.5">Siap Menahan Dorongan</span>
+                        </div>
+                    </div>
+
+                    <!-- Distraction & Breathing Tips -->
+                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
+                        <p class="font-bold text-slate-700 dark:text-slate-200">Teknik Distraksi Klinis Saat Timer Berjalan:</p>
+                        <ul class="list-disc list-inside text-slate-600 dark:text-slate-400 space-y-1">
+                            <li>Duduk tenang, jangan terburu-buru berlari ke toilet.</li>
+                            <li>Lakukan 5 kali kontraksi cepat otot panggul (<em>quick flicks</em>) untuk mengirim sinyal relaksasi ke kandung kemih.</li>
+                            <li>Tarik napas perlahan 4 detik, hembuskan 6 detik.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex items-center gap-3">
+                        <button id="btn-retrain-toggle" onclick="toggleRetrainTimer()"
+                            class="flex-1 py-3 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-sm shadow-md transition">
+                            Mulai Tahan Dorongan
+                        </button>
+                        <button onclick="resetRetrainTimer()"
+                            class="px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-bold transition">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MODULE B: Interactive Pelvic Floor / Kegel Trainer -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">Penguatan Otot Panggul</span>
+                            <span id="kegel-rep-badge" class="text-xs font-bold text-slate-600 dark:text-slate-300">Repetisi: 0 / 10</span>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-3">Pelvic Floor & Kegel Trainer</h3>
+
+                        <!-- Gender / Condition Mode Selector -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                            <button onclick="setKegelMode('female')" id="kegel-mode-female"
+                                class="p-2.5 rounded-xl border-2 border-cyan-600 bg-cyan-50/70 dark:bg-cyan-950/40 text-left transition">
+                                <div class="text-xs font-bold text-slate-900 dark:text-white">👩 Mode Wanita</div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Stress / Urge Incontinence</div>
+                            </button>
+                            <button onclick="setKegelMode('male')" id="kegel-mode-male"
+                                class="p-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-800 text-left transition">
+                                <div class="text-xs font-bold text-slate-900 dark:text-white">👨 Mode Pria</div>
+                                <div class="text-[11px] text-slate-500 dark:text-slate-400">Post-Void Dribble / Pasca-Prostat</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Animated Contraction / Relaxation Visual Ring -->
+                    <div class="flex flex-col items-center justify-center py-4">
+                        <div class="relative w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center">
+                            <div id="kegel-visual-ring"
+                                class="trainer-circle w-36 h-36 rounded-full border-4 border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 flex flex-col items-center justify-center text-center p-3 shadow-lg">
+                                <span id="kegel-phase-title" class="text-base sm:text-lg font-extrabold text-cyan-800 dark:text-cyan-200">SIAP</span>
+                                <span id="kegel-phase-seconds" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5">5 dtk</span>
+                            </div>
+                        </div>
+                        <p id="kegel-instruction-text" class="text-xs sm:text-sm font-medium text-center text-slate-600 dark:text-slate-300 mt-2 max-w-sm">
+                            Kencangkan otot panggul (seperti menahan aliran kencing & gas) tanpa menahan napas atau mengencangkan perut/paha.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex items-center gap-3">
+                        <button id="btn-kegel-toggle" onclick="toggleKegelTrainer()"
+                            class="flex-1 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm shadow-md transition">
+                            Mulai Latihan Kegel
+                        </button>
+                        <button onclick="resetKegelTrainer()"
+                            class="px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-bold transition">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ===================================================================== -->
+        <!-- TAB 4: LAPORAN KLINIS (Doctor-Ready Analytics & Print/PDF Summary)    -->
+        <!-- ===================================================================== -->
+        <section id="tab-report" class="tab-section hidden space-y-6">
+            
+            <!-- Print-Only Medical Header -->
+            <div class="hidden print-only border-b-2 border-slate-800 pb-4 mb-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-extrabold text-slate-900">RINGKASAN KLINIS BLADDER DIARY & SKRINING LUTS</h1>
+                        <p class="text-sm text-slate-600">Dihasilkan oleh UroTrack — Smart Bladder & Hydration Wellness</p>
+                    </div>
+                    <div class="text-right text-xs text-slate-600">
+                        <p id="print-date-stamp">Tanggal Cetak: -</p>
+                        <p>Dokumen Evaluasi Urologi Mandiri</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Header (Hidden when printing) -->
+            <div class="no-print flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">Laporan Klinis Siap Dokter</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Kalkulasi parameter urologi otomatis berdasarkan catatan harian & skor kuesioner Anda.</p>
+                </div>
+                <button onclick="printClinicalReport()"
+                    class="px-5 py-3 rounded-xl bg-medical-600 hover:bg-medical-700 text-white font-bold text-sm shadow-md shadow-medical-600/20 transition flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span>Cetak / Simpan PDF Laporan Dokter</span>
+                </button>
+            </div>
+
+            <!-- Clinical Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="print-card bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-bold uppercase text-slate-500">Asupan vs Output 24 Jam</span>
+                    <div class="mt-2 text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                        <span id="rep-intake">0</span> ml <span class="text-slate-400 font-normal">/</span> <span id="rep-output" class="text-medical-600 dark:text-medical-400">0</span> ml
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Keseimbangan cairan harian</p>
+                </div>
+
+                <div class="print-card bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-bold uppercase text-slate-500">Rata-rata Volume Berkemih</span>
+                    <div class="mt-2 text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                        <span id="rep-avg-void">0</span> ml
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Kapasitas fungsional (Normal: 200–400 ml)</p>
+                </div>
+
+                <div class="print-card bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-bold uppercase text-slate-500">Frekuensi Siang / Malam</span>
+                    <div class="mt-2 text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">
+                        <span id="rep-freq-day">0</span>x Siang <span class="text-slate-400 font-normal">|</span> <span id="rep-freq-night" class="text-indigo-600 dark:text-indigo-400">0</span>x Malam
+                    </div>
+                    <p id="rep-max-void" class="text-xs text-slate-500 mt-1">Volume berkemih maksimal: 0 ml</p>
+                </div>
+
+                <div class="print-card bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <span class="text-xs font-bold uppercase text-slate-500">Nocturnal Polyuria Index (NPi)</span>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span id="rep-npi-value" class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">0%</span>
+                        <span id="rep-npi-status" class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Normal</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">Batas klinis: &gt;33% (Lansia) / &gt;20% (Dewasa muda)</p>
+                </div>
+            </div>
+
+            <!-- Visual Comparison Bars & Screening Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Visual Comparison Charts -->
+                <div class="print-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Proporsi Volume & Keseimbangan Cairan</h3>
+
+                    <!-- Bar 1: Day vs Night Urine Volume -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-medical-700 dark:text-medical-400">Volume Urin Siang: <strong id="bar-day-vol-text">0 ml (0%)</strong></span>
+                            <span class="text-indigo-600 dark:text-indigo-400">Volume Urin Malam (NPi): <strong id="bar-night-vol-text">0 ml (0%)</strong></span>
+                        </div>
+                        <div class="w-full h-5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
+                            <div id="bar-day-vol" style="width: 50%" class="bg-medical-500 h-full transition-all duration-500"></div>
+                            <div id="bar-night-vol" style="width: 50%" class="bg-indigo-600 h-full transition-all duration-500"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500">NPi menghitung persentase volume urin yang keluar saat tidur malam dibanding total urin 24 jam.</p>
+                    </div>
+
+                    <!-- Bar 2: Intake vs Output -->
+                    <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-sky-600 dark:text-sky-400">Total Minum: <strong id="bar-intake-text">0 ml</strong></span>
+                            <span class="text-emerald-600 dark:text-emerald-400">Total Urin: <strong id="bar-output-text">0 ml</strong></span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="w-full h-3.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                <div id="bar-intake-fill" style="width: 0%" class="bg-sky-500 h-full rounded-full transition-all duration-500"></div>
+                            </div>
+                            <div class="w-full h-3.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                <div id="bar-output-fill" style="width: 0%" class="bg-emerald-500 h-full rounded-full transition-all duration-500"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Latest Screening Summary Card -->
+                <div class="print-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900 dark:text-white">Ringkasan Kuesioner Klinis & Catatan Gejala</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <span class="text-xs font-bold text-slate-500">Skor IPSS (Pria/BPH)</span>
+                                <div id="rep-ipss-summary" class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Belum diisi</div>
+                            </div>
+                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                <span class="text-xs font-bold text-slate-500">Skor OAB-V8</span>
+                                <div id="rep-oab-summary" class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Belum diisi</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-medical-50/70 dark:bg-medical-950/40 border border-medical-200 dark:border-medical-800 text-xs text-slate-700 dark:text-slate-300 space-y-1">
+                        <p class="font-bold text-medical-800 dark:text-medical-300">Catatan Evaluasi Otomatis:</p>
+                        <p id="rep-clinical-note">Silakan lengkapi catatan berkemih dan minum pada tab Tracker Harian untuk menghasilkan ringkasan klinis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Structured Clinical Table (For Urologist Review) -->
+            <div class="print-card bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3">Tabel Log Voiding & Cairan (Format Konsultasi Urologi)</h3>
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="border-b-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                            <th class="py-2.5 px-3">Waktu</th>
+                            <th class="py-2.5 px-3">Kategori</th>
+                            <th class="py-2.5 px-3">Detail / Jenis</th>
+                            <th class="py-2.5 px-3">Volume</th>
+                            <th class="py-2.5 px-3">Urgensi / Keterangan Klinis</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rep-table-body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="no-print border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-5 px-4 mt-8">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <p><strong>UroTrack</strong> — Alat bantu pemantauan mandiri & edukasi kesehatan saluran kemih. Tidak menggantikan diagnosis medis langsung.</p>
+            <p>Data tersimpan secara lokal di perangkat Anda (Privasi Terjaga).</p>
+        </div>
+    </footer>
+
+    <!-- ===================================================================== -->
+    <!-- MODAL: RED FLAG EMERGENCY ALERT (Tanda Bahaya Urologi)                -->
+    <!-- ===================================================================== -->
+    <div id="redflag-modal" class="no-print hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 max-w-lg w-full rounded-2xl border-2 border-rose-500 shadow-2xl overflow-hidden animate-fadeIn">
+            <div class="bg-rose-600 px-5 py-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h3 class="text-lg font-extrabold">Tanda Bahaya Urologi (Red Flags)</h3>
+                </div>
+                <button onclick="closeRedFlagModal()" class="p-1 rounded-lg hover:bg-rose-700 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4 text-sm text-slate-700 dark:text-slate-200">
+                <p class="font-semibold text-rose-700 dark:text-rose-400">
+                    Segera kunjungi Instalasi Gawat Darurat (IGD) atau dokter spesialis urologi jika Anda mengalami salah satu gejala berikut:
+                </p>
+                <ul class="space-y-2.5">
+                    <li class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-start gap-2.5">
+                        <span class="font-bold text-rose-600">1.</span>
+                        <div><strong>Retensi Urin Akut:</strong> Sama sekali tidak bisa buang air kecil disertai rasa penuh dan nyeri hebat di perut bagian bawah.</div>
+                    </li>
+                    <li class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-start gap-2.5">
+                        <span class="font-bold text-rose-600">2.</span>
+                        <div><strong>Hematuria (Urin Berdarah):</strong> Urin berwarna merah segar, merah kecokelatan, atau keluar gumpalan darah.</div>
+                    </li>
+                    <li class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-start gap-2.5">
+                        <span class="font-bold text-rose-600">3.</span>
+                        <div><strong>Demam Menggigil & Nyeri Pinggang Hebat:</strong> Tanda infeksi ginjal akut (pielonefritis) atau sumbatan batu saluran kemih yang berisiko sepsis.</div>
+                    </li>
+                    <li class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 flex items-start gap-2.5">
+                        <span class="font-bold text-rose-600">4.</span>
+                        <div><strong>Kelemahan Tungkai / Mati Rasa Area Selangkangan:</strong> Disertai gangguan menahan kencing/BAB mendadak (curiga sindrom cauda equina).</div>
+                    </li>
+                </ul>
+                <button onclick="closeRedFlagModal()"
+                    class="w-full py-3 rounded-xl bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 text-white font-bold text-sm transition">
+                    Saya Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT APPLICATION LOGIC                                          -->
+    <!-- ===================================================================== -->
+    <script>
+        // --- 1. STATE MANAGEMENT & LOCAL STORAGE ---
+        const STORAGE_KEY = 'urotrack_v1_data';
+        let appState = {
+            logs: [], // { id, type: 'fluid'|'void', time, volume, detail, isIrritant, isNight, urgency, leakage, leakTrigger }
+            screening: {
+                ipss: null, // { score, qol, severity, date }
+                oab: null   // { score, severity, date }
+            },
+            settings: {
+                seniorMode: false,
+                darkMode: false
+            }
+        };
+
+        // Form temporary selections
+        let selectedDrink = { name: 'Air Putih', isIrritant: false };
+        let selectedUrgency = 1;
+
+        // IPSS Questions Data (7 standard questions + 1 QoL)
+        const ipssQuestions = [
+            "1. Pengosongan Tidak Tuntas: Seberapa sering Anda merasa kandung kemih belum kosong sepenuhnya setelah selesai kencing?",
+            "2. Frekuensi: Seberapa sering Anda harus kembali kencing dalam waktu kurang dari 2 jam setelah selesai kencing?",
+            "3. Intermitensi: Seberapa sering aliran kencing Anda berhenti dan mulai kembali beberapa kali saat kencing?",
+            "4. Urgensi: Seberapa sering Anda merasa sulit menahan keinginan untuk buang air kecil?",
+            "5. Pancaran Lemah: Seberapa sering pancaran urin Anda terasa lemah?",
+            "6. Mengejan: Seberapa sering Anda harus mengejan untuk mulai buang air kecil?",
+            "7. Nokturia: Berapa kali rata-rata Anda terbangun dari tidur malam untuk buang air kecil hingga bangun pagi?"
+        ];
+        const ipssOptions = ["Tidak pernah (0)", "< 1 dari 5 kali (1)", "< Setengahnya (2)", "Sekitar setengahnya (3)", "> Setengahnya (4)", "Hampir selalu (5)"];
+        const ipssNocturiaOptions = ["Tidak pernah (0)", "1 kali (1)", "2 kali (2)", "3 kali (3)", "4 kali (4)", "5 kali atau lebih (5)"];
+
+        // OAB-V8 Questions Data (8 standard questions)
+        const oabQuestions = [
+            "1. Sering buang air kecil pada siang hari?",
+            "2. Dorongan ingin buang air kecil yang tidak nyaman dan mendadak?",
+            "3. Dorongan ingin buang air kecil yang tiba-tiba tanpa peringatan sebelumnya?",
+            "4. Keluarnya urin tanpa sengaja (mengompol) dalam jumlah sedikit?",
+            "5. Terbangun di malam hari karena harus buang air kecil?",
+            "6. Terbangun di malam hari karena dorongan buang air kecil yang mendadak?",
+            "7. Dorongan buang air kecil yang sangat kuat sehingga sulit ditahan?",
+            "8. Keluarnya urin tanpa sengaja yang berhubungan dengan dorongan kuat untuk kencing?"
+        ];
+        const oabOptions = ["Tidak sama sekali (0)", "Sedikit sekali (1)", "Agak terganggu (2)", "Cukup terganggu (3)", "Sangat terganggu (4)", "Amat sangat terganggu (5)"];
+
+        // --- 2. INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            applySavedAccessibility();
+            setCurrentTimeDefaults();
+            renderScreeningForms();
+            updateAllUI();
+        });
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                }
+            } catch (e) {
+                console.error("Gagal memuat LocalStorage:", e);
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error("Gagal menyimpan ke LocalStorage:", e);
+            }
+        }
+
+        function setCurrentTimeDefaults() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const timeStr = `${hh}:${mm}`;
+            
+            document.getElementById('fluid-time').value = timeStr;
+            document.getElementById('void-time').value = timeStr;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date-display').textContent = now.toLocaleDateString('id-ID', options);
+            document.getElementById('print-date-stamp').textContent = `Tanggal Cetak: ${now.toLocaleDateString('id-ID', options)}`;
+        }
+
+        // --- 3. ACCESSIBILITY & NAVIGATION ---
+        function applySavedAccessibility() {
+            if (appState.settings.seniorMode) {
+                document.documentElement.classList.add('senior-mode');
+                document.getElementById('btn-senior-mode').classList.add('ring-2', 'ring-medical-500');
+            }
+            if (appState.settings.darkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('label-dark-mode').textContent = 'Mode Terang';
+            }
+        }
+
+        function toggleSeniorMode() {
+            appState.settings.seniorMode = !appState.settings.seniorMode;
+            document.documentElement.classList.toggle('senior-mode', appState.settings.seniorMode);
+            document.getElementById('btn-senior-mode').classList.toggle('ring-2', appState.settings.seniorMode);
+            document.getElementById('btn-senior-mode').classList.toggle('ring-medical-500', appState.settings.seniorMode);
+            saveToStorage();
+            showToast(appState.settings.seniorMode ? 'Mode Lansia (Teks Besar) diaktifkan' : 'Ukuran teks standar dipulihkan');
+        }
+
+        function toggleDarkMode() {
+            appState.settings.darkMode = !appState.settings.darkMode;
+            document.documentElement.classList.toggle('dark', appState.settings.darkMode);
+            document.getElementById('label-dark-mode').textContent = appState.settings.darkMode ? 'Mode Terang' : 'Mode Malam';
+            saveToStorage();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active-tab', 'bg-medical-600', 'text-white', 'border-medical-600', 'shadow-sm');
+                btn.classList.add('bg-slate-50', 'dark:bg-slate-800/70', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            activeBtn.classList.remove('bg-slate-50', 'dark:bg-slate-800/70', 'text-slate-600', 'dark:text-slate-300', 'border-slate-200', 'dark:border-slate-700');
+            activeBtn.classList.add('active-tab', 'bg-medical-600', 'text-white', 'border-medical-600', 'shadow-sm');
+
+            if (tabName === 'report') {
+                updateReportUI();
+            }
+        }
+
+        // --- 4. TRACKER HARIAN LOGIC ---
+        function selectDrinkType(name, isIrritant, btnEl) {
+            selectedDrink = { name, isIrritant };
+            document.querySelectorAll('.drink-btn').forEach(b => {
+                b.classList.remove('border-sky-600', 'bg-sky-50', 'dark:bg-sky-950/60', 'text-sky-800', 'dark:text-sky-200', 'ring-1', 'ring-sky-500');
+                b.classList.add('border-slate-200', 'dark:border-slate-700');
+            });
+            btnEl.classList.remove('border-slate-200', 'dark:border-slate-700');
+            btnEl.classList.add('border-sky-600', 'bg-sky-50', 'dark:bg-sky-950/60', 'text-sky-800', 'dark:text-sky-200', 'ring-1', 'ring-sky-500');
+
+            const alertBox = document.getElementById('irritant-warning-box');
+            if (isIrritant) {
+                alertBox.classList.remove('hidden');
+            } else {
+                alertBox.classList.add('hidden');
+            }
+        }
+
+        function setFluidVolume(ml) {
+            document.getElementById('fluid-volume').value = ml;
+        }
+
+        function setVoidVolume(ml) {
+            document.getElementById('void-volume').value = ml;
+        }
+
+        function selectUrgency(level, labelText, btnEl) {
+            selectedUrgency = level;
+            document.getElementById('urgency-label-text').textContent = labelText;
+            document.querySelectorAll('.urgency-btn').forEach(b => {
+                b.classList.remove('bg-medical-600', 'text-white', 'border-medical-600');
+                b.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-700', 'dark:text-slate-300');
+            });
+            btnEl.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-700', 'dark:text-slate-300');
+            btnEl.classList.add('bg-medical-600', 'text-white', 'border-medical-600');
+        }
+
+        function toggleLeakageTrigger() {
+            const isChecked = document.getElementById('void-leakage').checked;
+            document.getElementById('leakage-trigger-container').classList.toggle('hidden', !isChecked);
+        }
+
+        function addFluidLog(e) {
+            e.preventDefault();
+            const volume = parseInt(document.getElementById('fluid-volume').value, 10);
+            const time = document.getElementById('fluid-time').value;
+            const isNight = document.getElementById('fluid-night').checked;
+
+            if (!volume || volume <= 0) return;
+
+            appState.logs.push({
+                id: Date.now() + Math.random(),
+                type: 'fluid',
+                time,
+                volume,
+                detail: selectedDrink.name,
+                isIrritant: selectedDrink.isIrritant,
+                isNight
+            });
+
+            saveToStorage();
+            updateAllUI();
+            showToast(`Tercatat: ${selectedDrink.name} (${volume} ml)`);
+        }
+
+        function addVoidLog(e) {
+            e.preventDefault();
+            const volume = parseInt(document.getElementById('void-volume').value, 10);
+            const time = document.getElementById('void-time').value;
+            const isNight = document.getElementById('void-nocturia').checked;
+            const leakage = document.getElementById('void-leakage').checked;
+            const leakTrigger = leakage ? document.getElementById('void-leak-trigger').value : '';
+
+            if (!volume || volume <= 0) return;
+
+            appState.logs.push({
+                id: Date.now() + Math.random(),
+                type: 'void',
+                time,
+                volume,
+                detail: 'Buang Air Kecil',
+                urgency: selectedUrgency,
+                isNight,
+                leakage,
+                leakTrigger
+            });
+
+            // Reset leakage checkbox after logging
+            document.getElementById('void-leakage').checked = false;
+            document.getElementById('leakage-trigger-container').classList.add('hidden');
+
+            saveToStorage();
+            updateAllUI();
+            showToast(`Tercatat: Berkemih ${volume} ml (Urgensi ${selectedUrgency}/4)`);
+        }
+
+        function deleteLog(id) {
+            appState.logs = appState.logs.filter(item => item.id !== id);
+            saveToStorage();
+            updateAllUI();
+            showToast('Catatan dihapus');
+        }
+
+        function loadSampleData() {
+            appState.logs = [
+                { id: 101, type: 'void', time: '06:30', volume: 320, detail: 'Buang Air Kecil', urgency: 1, isNight: false, leakage: false, leakTrigger: '' },
+                { id: 102, type: 'fluid', time: '07:00', volume: 300, detail: 'Air Putih', isIrritant: false, isNight: false },
+                { id: 103, type: 'fluid', time: '08:30', volume: 200, detail: 'Kopi / Kafein', isIrritant: true, isNight: false },
+                { id: 104, type: 'void', time: '09:45', volume: 150, detail: 'Buang Air Kecil', urgency: 3, isNight: false, leakage: false, leakTrigger: '' },
+                { id: 105, type: 'void', time: '11:15', volume: 120, detail: 'Buang Air Kecil', urgency: 4, isNight: false, leakage: true, leakTrigger: 'Tidak Sempat ke Toilet (Urge)' },
+                { id: 106, type: 'fluid', time: '12:30', volume: 350, detail: 'Air Putih', isIrritant: false, isNight: false },
+                { id: 107, type: 'void', time: '15:00', volume: 240, detail: 'Buang Air Kecil', urgency: 2, isNight: false, leakage: false, leakTrigger: '' },
+                { id: 108, type: 'fluid', time: '17:30', volume: 250, detail: 'Teh', isIrritant: true, isNight: false },
+                { id: 109, type: 'fluid', time: '21:30', volume: 300, detail: 'Air Putih', isIrritant: false, isNight: true },
+                { id: 110, type: 'void', time: '01:20', volume: 280, detail: 'Buang Air Kecil', urgency: 3, isNight: true, leakage: false, leakTrigger: '' },
+                { id: 111, type: 'void', time: '04:10', volume: 260, detail: 'Buang Air Kecil', urgency: 2, isNight: true, leakage: false, leakTrigger: '' }
+            ];
+            saveToStorage();
+            updateAllUI();
+            showToast('Contoh data klinis 24 jam berhasil dimuat!');
+        }
+
+        function confirmClearData() {
+            appState.logs = [];
+            saveToStorage();
+            updateAllUI();
+            showToast('Seluruh catatan harian telah dikosongkan');
+        }
+
+        // --- 5. UPDATE UI & ANALYTICS ---
+        function updateAllUI() {
+            // Sort logs by time
+            const sortedLogs = [...appState.logs].sort((a, b) => a.time.localeCompare(b.time));
+
+            const fluids = sortedLogs.filter(l => l.type === 'fluid');
+            const voids = sortedLogs.filter(l => l.type === 'void');
+
+            const totalIntake = fluids.reduce((sum, item) => sum + item.volume, 0);
+            const totalOutput = voids.reduce((sum, item) => sum + item.volume, 0);
+            const avgVoid = voids.length ? Math.round(totalOutput / voids.length) : 0;
+
+            const dayVoids = voids.filter(v => !v.isNight);
+            const nightVoids = voids.filter(v => v.isNight);
+            const leakCount = voids.filter(v => v.leakage).length;
+            const irritantCount = fluids.filter(f => f.isIrritant).length;
+
+            // Update Summary Cards
+            document.getElementById('stat-intake').textContent = totalIntake.toLocaleString('id-ID');
+            document.getElementById('stat-output').textContent = totalOutput.toLocaleString('id-ID');
+            document.getElementById('stat-avg-void').textContent = `Rata-rata: ${avgVoid} ml / berkemih`;
+            document.getElementById('stat-day-count').textContent = dayVoids.length;
+            document.getElementById('stat-night-count').textContent = nightVoids.length;
+            document.getElementById('stat-leak-count').textContent = `Kebocoran (inkontinensia): ${leakCount}x`;
+
+            const irritantBadge = document.getElementById('stat-irritant-badge');
+            const irritantDesc = document.getElementById('stat-irritant-desc');
+            if (irritantCount === 0) {
+                irritantBadge.className = 'inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+                irritantBadge.textContent = 'Aman / Minim Iritan';
+                irritantDesc.textContent = 'Tidak ada konsumsi kafein/asam/soda tercatat.';
+            } else {
+                irritantBadge.className = 'inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                irritantBadge.textContent = `${irritantCount}x Minuman Pemicu`;
+                irritantDesc.textContent = 'Kafein/teh/asam dapat memicu gejala urgensi OAB.';
+            }
+
+            // Render Timeline
+            renderTimeline(sortedLogs);
+            // Update Report Tab
+            updateReportUI();
+        }
+
+        function renderTimeline(sortedLogs) {
+            const container = document.getElementById('activity-timeline-list');
+            document.getElementById('timeline-count-badge').textContent = `${sortedLogs.length} Catatan`;
+
+            if (sortedLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 px-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm">
+                        Belum ada catatan hari ini. Gunakan formulir di atas atau klik <strong>"Isi Contoh Data Klinis"</strong> untuk melihat simulasi.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sortedLogs.map(item => {
+                if (item.type === 'fluid') {
+                    return `
+                        <div class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-sky-600 text-white font-bold text-xs">${item.time}</span>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-bold text-sm text-slate-900 dark:text-white">Minum: ${item.detail}</span>
+                                        <span class="text-xs font-extrabold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-900/70 px-2 py-0.5 rounded-md">${item.volume} ml</span>
+                                        ${item.isIrritant ? '<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/70 dark:text-amber-200">Iritan Kandung Kemih</span>' : ''}
+                                        ${item.isNight ? '<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-200">Sebelum Tidur</span>' : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="deleteLog(${item.id})" title="Hapus" class="p-2 text-slate-400 hover:text-rose-600 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-medical-50/70 dark:bg-medical-950/30 border border-medical-200/80 dark:border-medical-900">
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-lg bg-medical-600 text-white font-bold text-xs">${item.time}</span>
+                                <div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-bold text-sm text-slate-900 dark:text-white">Berkemih</span>
+                                        <span class="text-xs font-extrabold text-medical-700 dark:text-medical-300 bg-medical-100 dark:bg-medical-900/70 px-2 py-0.5 rounded-md">${item.volume} ml</span>
+                                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Urgensi: ${item.urgency}/4</span>
+                                        ${item.isNight ? '<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900/70 dark:text-indigo-200">Nokturia (Malam)</span>' : ''}
+                                        ${item.leakage ? `<span class="text-[11px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900/70 dark:text-rose-200">Bocor: ${item.leakTrigger}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="deleteLog(${item.id})" title="Hapus" class="p-2 text-slate-400 hover:text-rose-600 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        // --- 6. CLINICAL SCREENING QUESTIONNAIRES (IPSS & OAB-V8) ---
+        function switchScreeningForm(type) {
+            const ipssCont = document.getElementById('screening-ipss-container');
+            const oabCont = document.getElementById('screening-oab-container');
+            const btnIpss = document.getElementById('btn-sub-ipss');
+            const btnOab = document.getElementById('btn-sub-oab');
+
+            if (type === 'ipss') {
+                ipssCont.classList.remove('hidden');
+                oabCont.classList.add('hidden');
+                btnIpss.classList.add('border-medical-600', 'bg-medical-50/70', 'dark:bg-medical-950/40');
+                btnIpss.classList.remove('border-slate-200', 'dark:border-slate-800');
+                btnOab.classList.remove('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                btnOab.classList.add('border-slate-200', 'dark:border-slate-800');
+            } else {
+                oabCont.classList.remove('hidden');
+                ipssCont.classList.add('hidden');
+                btnOab.classList.add('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                btnOab.classList.remove('border-slate-200', 'dark:border-slate-800');
+                btnIpss.classList.remove('border-medical-600', 'bg-medical-50/70', 'dark:bg-medical-950/40');
+                btnIpss.classList.add('border-slate-200', 'dark:border-slate-800');
+            }
+        }
+
+        function renderScreeningForms() {
+            // Render IPSS
+            const ipssList = document.getElementById('ipss-questions-list');
+            ipssList.innerHTML = ipssQuestions.map((q, qIdx) => {
+                const opts = qIdx === 6 ? ipssNocturiaOptions : ipssOptions;
+                return `
+                    <div class="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                        <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">${q}</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                            ${opts.map((opt, val) => `
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="ipss_q_${qIdx}" value="${val}" ${val === 0 ? 'checked' : ''} onchange="calculateIPSS()" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-center text-[11px] sm:text-xs font-medium peer-checked:bg-medical-600 peer-checked:text-white peer-checked:border-medical-600 transition">
+                                        ${opt}
+                                    </div>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Render OAB-V8
+            const oabList = document.getElementById('oab-questions-list');
+            oabList.innerHTML = oabQuestions.map((q, qIdx) => `
+                <div class="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                    <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">${q}</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        ${oabOptions.map((opt, val) => `
+                            <label class="cursor-pointer">
+                                <input type="radio" name="oab_q_${qIdx}" value="${val}" ${val === 0 ? 'checked' : ''} onchange="calculateOAB()" class="peer sr-only">
+                                <div class="p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-center text-[11px] sm:text-xs font-medium peer-checked:bg-cyan-600 peer-checked:text-white peer-checked:border-cyan-600 transition">
+                                    ${opt}
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateIPSS() {
+            let total = 0;
+            for (let i = 0; i < 7; i++) {
+                const selected = document.querySelector(`input[name="ipss_q_${i}"]:checked`);
+                if (selected) total += parseInt(selected.value, 10);
+            }
+
+            document.getElementById('ipss-total-score').textContent = total;
+            const badge = document.getElementById('ipss-severity-badge');
+            const interp = document.getElementById('ipss-interpretation');
+
+            if (total <= 7) {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+                badge.textContent = 'Gejala Ringan (0–7)';
+                interp.textContent = 'Gejala saluran kemih bawah tergolong ringan. Dianjurkan observasi berkala, pengaturan minum malam, dan pola hidup sehat.';
+            } else if (total <= 19) {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                badge.textContent = 'Gejala Sedang (8–19)';
+                interp.textContent = 'Gejala cukup mengganggu aktivitas harian. Disarankan berkonsultasi ke dokter urologi sambil membawa catatan Bladder Diary 3 hari.';
+            } else {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+                badge.textContent = 'Gejala Berat (20–35)';
+                interp.textContent = 'Gejala berat yang berisiko memengaruhi kualitas hidup maupun fungsi pengosongan kandung kemih. Segera jadwalkan evaluasi medis ke dokter urologi.';
+            }
+            return { score: total, severity: badge.textContent };
+        }
+
+        function calculateOAB() {
+            let total = 0;
+            for (let i = 0; i < 8; i++) {
+                const selected = document.querySelector(`input[name="oab_q_${i}"]:checked`);
+                if (selected) total += parseInt(selected.value, 10);
+            }
+
+            document.getElementById('oab-total-score').textContent = total;
+            const badge = document.getElementById('oab-severity-badge');
+            const interp = document.getElementById('oab-interpretation');
+
+            if (total < 8) {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+                badge.textContent = 'Risiko Rendah (< 8)';
+                interp.textContent = 'Skor di bawah ambang batas klinis OAB (< 8). Pertahankan hidrasi seimbang dan kurangi minuman iritatif.';
+            } else {
+                badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+                badge.textContent = 'Kemungkinan OAB (Skor ≥ 8)';
+                interp.textContent = 'Skor ≥ 8 mengindikasikan gejala Overactive Bladder (OAB). Kombinasi Bladder Retraining, latihan Kegel, pembatasan kafein, dan konsultasi dokter sangat dianjurkan.';
+            }
+            return { score: total, severity: badge.textContent };
+        }
+
+        function saveScreeningResult(type) {
+            if (type === 'IPSS') {
+                const res = calculateIPSS();
+                appState.screening.ipss = { ...res, date: new Date().toLocaleDateString('id-ID') };
+                showToast(`Skor IPSS (${res.score}/35) disimpan ke Laporan Klinis`);
+            } else {
+                const res = calculateOAB();
+                appState.screening.oab = { ...res, date: new Date().toLocaleDateString('id-ID') };
+                showToast(`Skor OAB-V8 (${res.score}/40) disimpan ke Laporan Klinis`);
+            }
+            saveToStorage();
+            updateReportUI();
+        }
+
+        // --- 7. TERAPI MANDIRI (BLADDER RETRAINING & KEGEL TRAINER) ---
+        let retrainDuration = 300; // default 5 min
+        let retrainRemaining = 300;
+        let retrainInterval = null;
+
+        function setRetrainDuration(sec) {
+            retrainDuration = sec;
+            resetRetrainTimer();
+            document.querySelectorAll('.retrain-preset').forEach(btn => {
+                btn.classList.remove('border-medical-600', 'bg-medical-50', 'dark:bg-medical-950/60', 'text-medical-700', 'dark:text-medical-300');
+                btn.classList.add('border-slate-200', 'dark:border-slate-700');
+            });
+            event.target.classList.remove('border-slate-200', 'dark:border-slate-700');
+            event.target.classList.add('border-medical-600', 'bg-medical-50', 'dark:bg-medical-950/60', 'text-medical-700', 'dark:text-medical-300');
+        }
+
+        function formatSeconds(sec) {
+            const m = String(Math.floor(sec / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function toggleRetrainTimer() {
+            const btn = document.getElementById('btn-retrain-toggle');
+            const circle = document.getElementById('retrain-circle');
+            const cue = document.getElementById('retrain-breath-cue');
+
+            if (retrainInterval) {
+                clearInterval(retrainInterval);
+                retrainInterval = null;
+                btn.textContent = 'Lanjutkan Timer';
+                circle.classList.remove('animate-pulse-glow');
+                cue.textContent = 'Dijeda';
+            } else {
+                btn.textContent = 'Jeda Timer';
+                circle.classList.add('animate-pulse-glow');
+                retrainInterval = setInterval(() => {
+                    if (retrainRemaining > 0) {
+                        retrainRemaining--;
+                        document.getElementById('retrain-timer-display').textContent = formatSeconds(retrainRemaining);
+                        const phase = retrainRemaining % 10;
+                        cue.textContent = phase >= 5 ? 'Tarik Napas Perlahan...' : 'Hembuskan & Rilekskan Panggul...';
+                    } else {
+                        clearInterval(retrainInterval);
+                        retrainInterval = null;
+                        circle.classList.remove('animate-pulse-glow');
+                        cue.textContent = 'Target Tercapai! Hebat!';
+                        btn.textContent = 'Mulai Ulang';
+                        showToast('Selamat! Anda berhasil menunda dorongan berkemih sesuai target.');
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetRetrainTimer() {
+            if (retrainInterval) {
+                clearInterval(retrainInterval);
+                retrainInterval = null;
+            }
+            retrainRemaining = retrainDuration;
+            document.getElementById('retrain-timer-display').textContent = formatSeconds(retrainRemaining);
+            document.getElementById('retrain-breath-cue').textContent = 'Siap Menahan Dorongan';
+            document.getElementById('btn-retrain-toggle').textContent = 'Mulai Tahan Dorongan';
+            document.getElementById('retrain-circle').classList.remove('animate-pulse-glow');
+        }
+
+        // Kegel Trainer Logic
+        let kegelInterval = null;
+        let kegelPhase = 'contract'; // 'contract' | 'relax'
+        let kegelSeconds = 5;
+        let kegelReps = 0;
+
+        function setKegelMode(mode) {
+            const fBtn = document.getElementById('kegel-mode-female');
+            const mBtn = document.getElementById('kegel-mode-male');
+            const inst = document.getElementById('kegel-instruction-text');
+
+            if (mode === 'female') {
+                fBtn.classList.add('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                fBtn.classList.remove('border-slate-200', 'dark:border-slate-800');
+                mBtn.classList.remove('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                mBtn.classList.add('border-slate-200', 'dark:border-slate-800');
+                inst.textContent = 'Tarik & angkat otot dasar panggul ke arah dalam (seperti menahan aliran urin & vagina/anus) selama 5 detik, lalu rileks penuh.';
+            } else {
+                mBtn.classList.add('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                mBtn.classList.remove('border-slate-200', 'dark:border-slate-800');
+                fBtn.classList.remove('border-cyan-600', 'bg-cyan-50/70', 'dark:bg-cyan-950/40');
+                fBtn.classList.add('border-slate-200', 'dark:border-slate-800');
+                inst.textContent = 'Kencangkan otot dasar panggul (seperti mengangkat pangkal penis & menahan aliran kencing) tanpa menahan napas. Efektif mencegah menetes setelah kencing.';
+            }
+        }
+
+        function toggleKegelTrainer() {
+            const btn = document.getElementById('btn-kegel-toggle');
+            if (kegelInterval) {
+                clearInterval(kegelInterval);
+                kegelInterval = null;
+                btn.textContent = 'Lanjutkan Latihan';
+            } else {
+                btn.textContent = 'Jeda Latihan';
+                updateKegelVisuals();
+                kegelInterval = setInterval(() => {
+                    kegelSeconds--;
+                    if (kegelSeconds <= 0) {
+                        if (kegelPhase === 'contract') {
+                            kegelPhase = 'relax';
+                            kegelSeconds = 5;
+                        } else {
+                            kegelReps++;
+                            document.getElementById('kegel-rep-badge').textContent = `Repetisi: ${kegelReps} / 10`;
+                            if (kegelReps >= 10) {
+                                resetKegelTrainer();
+                                showToast('Sesi 10 repetisi latihan Kegel selesai!');
+                                return;
+                            }
+                            kegelPhase = 'contract';
+                            kegelSeconds = 5;
+                        }
+                    }
+                    updateKegelVisuals();
+                }, 1000);
+            }
+        }
+
+        function updateKegelVisuals() {
+            const ring = document.getElementById('kegel-visual-ring');
+            const title = document.getElementById('kegel-phase-title');
+            const sec = document.getElementById('kegel-phase-seconds');
+
+            sec.textContent = `${kegelSeconds} dtk`;
+            if (kegelPhase === 'contract') {
+                title.textContent = 'TAHAN / KONTRAKSI';
+                ring.style.transform = 'scale(1.22)';
+                ring.classList.remove('border-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-950/60');
+                ring.classList.add('border-medical-600', 'bg-medical-100', 'dark:bg-medical-900/70');
+            } else {
+                title.textContent = 'RILEKS PENUH';
+                ring.style.transform = 'scale(0.95)';
+                ring.classList.remove('border-medical-600', 'bg-medical-100', 'dark:bg-medical-900/70');
+                ring.classList.add('border-cyan-500', 'bg-cyan-50', 'dark:bg-cyan-950/60');
+            }
+        }
+
+        function resetKegelTrainer() {
+            if (kegelInterval) {
+                clearInterval(kegelInterval);
+                kegelInterval = null;
+            }
+            kegelPhase = 'contract';
+            kegelSeconds = 5;
+            kegelReps = 0;
+            document.getElementById('kegel-rep-badge').textContent = 'Repetisi: 0 / 10';
+            document.getElementById('kegel-phase-title').textContent = 'SIAP';
+            document.getElementById('kegel-phase-seconds').textContent = '5 dtk';
+            document.getElementById('btn-kegel-toggle').textContent = 'Mulai Latihan Kegel';
+            const ring = document.getElementById('kegel-visual-ring');
+            ring.style.transform = 'scale(1)';
+        }
+
+        // --- 8. LAPORAN KLINIS & PRINT ---
+        function updateReportUI() {
+            const sortedLogs = [...appState.logs].sort((a, b) => a.time.localeCompare(b.time));
+            const fluids = sortedLogs.filter(l => l.type === 'fluid');
+            const voids = sortedLogs.filter(l => l.type === 'void');
+
+            const totalIntake = fluids.reduce((s, i) => s + i.volume, 0);
+            const totalOutput = voids.reduce((s, i) => s + i.volume, 0);
+            const avgVoid = voids.length ? Math.round(totalOutput / voids.length) : 0;
+            const maxVoid = voids.length ? Math.max(...voids.map(v => v.volume)) : 0;
+
+            const dayVoids = voids.filter(v => !v.isNight);
+            const nightVoids = voids.filter(v => v.isNight);
+            const dayVol = dayVoids.reduce((s, i) => s + i.volume, 0);
+            const nightVol = nightVoids.reduce((s, i) => s + i.volume, 0);
+
+            // Nocturnal Polyuria Index (NPi)
+            const npi = totalOutput > 0 ? Math.round((nightVol / totalOutput) * 100) : 0;
+            const dayPct = totalOutput > 0 ? 100 - npi : 50;
+
+            document.getElementById('rep-intake').textContent = totalIntake.toLocaleString('id-ID');
+            document.getElementById('rep-output').textContent = totalOutput.toLocaleString('id-ID');
+            document.getElementById('rep-avg-void').textContent = avgVoid;
+            document.getElementById('rep-freq-day').textContent = dayVoids.length;
+            document.getElementById('rep-freq-night').textContent = nightVoids.length;
+            document.getElementById('rep-max-void').textContent = `Volume berkemih maksimal: ${maxVoid} ml`;
+
+            document.getElementById('rep-npi-value').textContent = `${npi}%`;
+            const npiStatus = document.getElementById('rep-npi-status');
+            if (totalOutput === 0) {
+                npiStatus.textContent = 'Belum ada data';
+                npiStatus.className = 'text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600';
+            } else if (npi > 33) {
+                npiStatus.textContent = 'Poliuria Nokturnal (>33%)';
+                npiStatus.className = 'text-[11px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+            } else if (npi > 20) {
+                npiStatus.textContent = 'Perhatian (>20%)';
+                npiStatus.className = 'text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+            } else {
+                npiStatus.textContent = 'Normal (≤20%)';
+                npiStatus.className = 'text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+            }
+
+            // Update Visual Bars
+            document.getElementById('bar-day-vol-text').textContent = `${dayVol} ml (${totalOutput > 0 ? dayPct : 0}%)`;
+            document.getElementById('bar-night-vol-text').textContent = `${nightVol} ml (${npi}%)`;
+            document.getElementById('bar-day-vol').style.width = `${totalOutput > 0 ? dayPct : 50}%`;
+            document.getElementById('bar-night-vol').style.width = `${totalOutput > 0 ? npi : 50}%`;
+
+            const maxBalance = Math.max(totalIntake, totalOutput, 2000);
+            document.getElementById('bar-intake-text').textContent = `${totalIntake} ml`;
+            document.getElementById('bar-output-text').textContent = `${totalOutput} ml`;
+            document.getElementById('bar-intake-fill').style.width = `${Math.min(100, (totalIntake / maxBalance) * 100)}%`;
+            document.getElementById('bar-output-fill').style.width = `${Math.min(100, (totalOutput / maxBalance) * 100)}%`;
+
+            // Update Screening Summary
+            if (appState.screening.ipss) {
+                document.getElementById('rep-ipss-summary').textContent = `${appState.screening.ipss.score}/35 — ${appState.screening.ipss.severity}`;
+            }
+            if (appState.screening.oab) {
+                document.getElementById('rep-oab-summary').textContent = `${appState.screening.oab.score}/40 — ${appState.screening.oab.severity}`;
+            }
+
+            // Clinical Note Auto-Generation
+            const noteEl = document.getElementById('rep-clinical-note');
+            if (voids.length === 0 && fluids.length === 0) {
+                noteEl.textContent = 'Belum ada catatan harian yang dimasukkan.';
+            } else {
+                let notes = [];
+                if (npi > 33) notes.push(`Indeks Poliuria Nokturnal meningkat (${npi}%), menandakan proporsi produksi urin malam hari berlebih.`);
+                if (avgVoid > 0 && avgVoid < 150) notes.push(`Rata-rata volume per berkemih kecil (${avgVoid} ml), mengarah pada penurunan kapasitas fungsional kandung kemih / hipersensitivitas detrusor.`);
+                if (voids.filter(v => v.leakage).length > 0) notes.push(`Tercatat ${voids.filter(v => v.leakage).length} episode kebocoran urin (inkontinensia).`);
+                if (fluids.filter(f => f.isIrritant).length > 0) notes.push(`Terdapat ${fluids.filter(f => f.isIrritant).length} kali asupan minuman berpotensi iritatif (kafein/teh/soda/asam).`);
+                if (notes.length === 0) notes.push('Pola keseimbangan cairan, frekuensi berkemih, dan kapasitas kandung kemih berada dalam rentang fisiologis yang baik.');
+                noteEl.textContent = notes.join(' ');
+            }
+
+            // Render Clinical Table
+            const tbody = document.getElementById('rep-table-body');
+            if (sortedLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Belum ada data log untuk ditampilkan.</td></tr>`;
+            } else {
+                tbody.innerHTML = sortedLogs.map(item => `
+                    <tr>
+                        <td class="py-2.5 px-3 font-bold">${item.time}</td>
+                        <td class="py-2.5 px-3">
+                            <span class="px-2 py-0.5 rounded text-xs font-bold ${item.type === 'fluid' ? 'bg-sky-100 text-sky-800' : 'bg-medical-100 text-medical-800'}">
+                                ${item.type === 'fluid' ? 'Asupan Minum' : 'Berkemih (Void)'}
+                            </span>
+                        </td>
+                        <td class="py-2.5 px-3 font-medium">${item.detail}</td>
+                        <td class="py-2.5 px-3 font-bold">${item.volume} ml</td>
+                        <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300">
+                            ${item.type === 'fluid'
+                                ? `${item.isIrritant ? 'Iritan Kandung Kemih; ' : ''}${item.isNight ? 'Minum Malam' : 'Siang Hari'}`
+                                : `Urgensi ${item.urgency}/4${item.isNight ? '; Nokturia (Bangun Tidur)' : ''}${item.leakage ? `; BOCOR (${item.leakTrigger})` : ''}`
+                            }
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function printClinicalReport() {
+            updateReportUI();
+            window.print();
+        }
+
+        // --- 9. MODAL & TOAST HELPERS ---
+        function openRedFlagModal() {
+            document.getElementById('redflag-modal').classList.remove('hidden');
+        }
+
+        function closeRedFlagModal() {
+            document.getElementById('redflag-modal').classList.add('hidden');
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 text-xs sm:text-sm font-semibold flex items-center justify-between gap-3 transition-all duration-300';
+            toast.innerHTML = `
+                <span>${message}</span>
+                <span class="text-medical-400 font-bold">✓</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
